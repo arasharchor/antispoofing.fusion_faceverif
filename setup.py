@@ -14,6 +14,7 @@ setup(
     description='Decision and score-level fusion tools for joint operation of face verification and anti-spoofing system',
     url='http://github.com/bioidiap/antispoofing.fusion_faceverif',
     license='LICENSE.txt',
+    author='Ivana Chingovska',
     author_email='Ivana Chingovska <ivana.chingovska@idiap.ch>',
     #long_description=open('doc/howto.rst').read(),
 
