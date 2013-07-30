@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='antispoofing.fusion_faceverif',
-    version='1.0',
+    version='1.1',
     description='Decision and score-level fusion tools for joint operation of face verification and anti-spoofing system',
     url='http://github.com/bioidiap/antispoofing.fusion_faceverif',
     license='LICENSE.txt',
