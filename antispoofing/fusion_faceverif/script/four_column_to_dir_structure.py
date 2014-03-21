@@ -46,7 +46,7 @@ def main():
   parser = argparse.ArgumentParser(description=__doc__,
       formatter_class=argparse.RawDescriptionHelpFormatter)
   
-  parser.add_argument('infile', metavar='DIR', type=str, help='The input score file')
+  parser.add_argument('infile', type=str, help='The input score file')
 
   parser.add_argument('outputdir', metavar='DIR', type=str, help='Directory where the extracted scores will be stored')
   
@@ -69,8 +69,6 @@ def main():
   database = args.cls(args)
 
   name_conv_dict = {'licit':'real', 'spoof':'attack'}
-
-  import ipdb; ipdb.set_trace()
 
   if args.fv_protocol == 'licit': # licit protocol, only real accesses are in play
     if args.scoresubset == 'train':

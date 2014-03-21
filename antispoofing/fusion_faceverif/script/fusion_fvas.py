@@ -52,7 +52,7 @@ def main():
   Database.create_parser(parser, implements_any_of='video')
 
   args = parser.parse_args()
- 
+
   #######################
   # Loading the database objects
   #######################

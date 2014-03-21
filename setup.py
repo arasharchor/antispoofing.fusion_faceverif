@@ -24,14 +24,16 @@ setup(
     install_requires=[
         "bob",      # base signal proc./machine learning library
         "argparse", # better option parsing
-        "xbob.db.replay", # Replay-Attack database
-        "antispoofing.utils",  #Utils Package
+        "xbob.db.replay <= 1.0.3", # Replay-Attack database
+        "antispoofing.utils <= 1.1.2",  #Utils Package
         "antispoofing.fusion", # Fusion utilities
     ],
 
     entry_points={
       'console_scripts': [
         'and_decision_fusion.py = antispoofing.fusion_faceverif.script.and_decision_fusion:main',
+        'and_decision_fusion_to4col.py = antispoofing.fusion_faceverif.script.and_decision_fusion_to4col:main',
+        'and_decision_epsc.py = antispoofing.fusion_faceverif.script.and_decision_epsc:main',
         'fusion_fvas.py = antispoofing.fusion_faceverif.script.fusion_fvas:main',
         'antispoof_threshold.py = antispoofing.fusion_faceverif.script.antispoof_threshold:main',
         'faceverif_threshold.py = antispoofing.fusion_faceverif.script.faceverif_threshold:main',

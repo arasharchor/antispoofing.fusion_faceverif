@@ -23,6 +23,14 @@ import matplotlib; matplotlib.use('pdf') #avoids TkInter threaded start
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as mpl
 
+
+def read_as_data(real_files, attack_files, as_scoresdir):
+  '''Reads all the scores for the files given in the lists real_files and attack_files'''
+
+  real_reader = score_reader.ScoreReader(real_files, as_scoresdir)
+  attack_reader = score_reader.ScoreReader(attack_files, as_scoresdir)
+  return real_reader.getScores(), attack_reader.getScores()
+
 def main():
 
   parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -45,8 +53,8 @@ def main():
   real_devel, attack_devel = database.get_devel_data()
   real_test, attack_test = database.get_test_data()
   
-  real_devel_as, attack_devel_as = read_as_data(real_devel, attack_devel, args.as_scoresdir, True)
-  real_test_as, attack_test_as = read_as_data(real_test, attack_test, args.as_scoresdir, True)
+  real_devel_as, attack_devel_as = read_as_data(real_devel, attack_devel, args.as_scoresdir) #True
+  real_test_as, attack_test_as = read_as_data(real_test, attack_test, args.as_scoresdir) #True
 
   as_thr = bob.measure.eer_threshold(attack_devel_as.flatten(), real_devel_as.flatten())
   

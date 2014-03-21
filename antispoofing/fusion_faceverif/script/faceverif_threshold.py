@@ -46,8 +46,8 @@ def main():
   database = args.cls(args)
   
   # read faceverif and antispoofing scores for all samples
-  devel_scores, devel_labels = gather_fvas_scores_2(database, 'devel', args.fv_scoresdir, as_dirs = None, binary_labels=False, fv_protocol='both', normalize=False)
-  test_scores, test_labels = gather_fvas_scores_2(database, 'test', args.fv_scoresdir, as_dirs = None, binary_labels=False, fv_protocol='both', normalize=False)
+  devel_scores, devel_labels = gather_fvas_scores(database, 'devel', [args.fv_scoresdir,], as_dirs = None, binary_labels=False, fv_protocol='both', normalize=False)
+  test_scores, test_labels = gather_fvas_scores(database, 'test', [args.fv_scoresdir,], as_dirs = None, binary_labels=False, fv_protocol='both', normalize=False)
   
   # separate the scores of valid users, impostors and spoofing attacks
   valid_devel_fv_scores = devel_scores[devel_labels == 1,0];  

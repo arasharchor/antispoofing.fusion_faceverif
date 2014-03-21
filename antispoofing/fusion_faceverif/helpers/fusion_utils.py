@@ -219,7 +219,7 @@ def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_
   return all_scores, all_labels
 
 
-def gather_fvas_scores(database, subset, fv_dirs, as_dirs, binary_labels=True, fv_protocol='both', normalize=True, score_norm=None, pol_augment=False):
+def gather_fvas_scores(database, subset, fv_dirs, as_dirs=None, binary_labels=True, fv_protocol='both', normalize=True, score_norm=None, pol_augment=False):
   """Populates a numpy.ndarray with the scores of face verification and anti-spoofing algorithm(s) and a numpy.array with their corresponding labels. Each column of the arrays correspond to a face verification / anti-spoofing algorithm (with face verification algorithms coming first).
   
   @param database The database (replay)
@@ -244,15 +244,18 @@ def gather_fvas_scores(database, subset, fv_dirs, as_dirs, binary_labels=True, f
   
   sys.stdout.write('Organizing faceverif and antispoofing scores: %s set\n' % (subset))
   
-  all_scores = numpy.ndarray((0, len(fv_dirs) + len(as_dirs)), 'float');
+  if as_dirs == None:
+    all_scores = numpy.ndarray((0, len(fv_dirs)), 'float');
+  else:
+    all_scores = numpy.ndarray((0, len(fv_dirs) + len(as_dirs)), 'float');  
   all_labels = numpy.array([], 'int');
   
   # reading the anti-spoofing data
-  real_scorereader_as = ScoreFusionReader(real, as_dirs)
-  attack_scorereader_as = ScoreFusionReader(attack, as_dirs)
-
-  real_as = real_scorereader_as.getConcatenetedScores(onlyValidScores=False)
-  attack_as = attack_scorereader_as.getConcatenetedScores(onlyValidScores=False)
+  if as_dirs != None:
+    real_scorereader_as = ScoreFusionReader(real, as_dirs)
+    attack_scorereader_as = ScoreFusionReader(attack, as_dirs)
+    real_as = real_scorereader_as.getConcatenetedScores(onlyValidScores=False)
+    attack_as = attack_scorereader_as.getConcatenetedScores(onlyValidScores=False)
 
   # reading the face verification data
   if fv_protocol == 'licit' or fv_protocol == 'both':
@@ -265,7 +268,10 @@ def gather_fvas_scores(database, subset, fv_dirs, as_dirs, binary_labels=True, f
       real_scorereader_fv = ScoreFusionReader(real, [os.path.join(sd, dir_precise, cl) for sd in fv_dirs])
       real_fv = real_scorereader_fv.getConcatenetedScores(onlyValidScores=False) # raw scores as numpy.array (the scores should be already normalized in the input files)
       labels = get_labels(os.path.join(fv_dirs[0], dir_precise), real, protocol='licit', client_id=cl, onlyValidScores=False, binary_labels=binary_labels) # labels for the face verification queries. The samples in the 'licit' protocol are real accesses => their label depends only on the identities
-      scores = numpy.append(real_fv, real_as, axis=1)
+      if as_dirs != None:
+        scores = numpy.append(real_fv, real_as, axis=1)
+      else:
+        scores = real_fv  
       all_labels = numpy.append(all_labels, labels)
       all_scores = numpy.append(all_scores, scores, axis=0)
   
@@ -281,10 +287,15 @@ def gather_fvas_scores(database, subset, fv_dirs, as_dirs, binary_labels=True, f
     #labels for the queries. Depends not on the identity, but on whether it is a real access or spoofing attack
     real_labels = get_labels(os.path.join(fv_dirs[0], dir_precise), real, protocol='spoof', onlyValidScores=False, binary_labels=binary_labels)
     attack_labels = get_labels(os.path.join(fv_dirs[0], dir_precise), attack, protocol='spoof', onlyValidScores=False, binary_labels=binary_labels)
-    real_scores = numpy.append(real_fv, real_as, axis=1)
+    if as_dirs != None:
+      real_scores = numpy.append(real_fv, real_as, axis=1)
+      attack_scores = numpy.append(attack_fv, attack_as, axis=1)
+    else:
+      real_scores = real_fv
+      attack_scores = attack_fv
+      
     all_labels = numpy.append(all_labels, real_labels)
     all_scores = numpy.append(all_scores, real_scores, axis=0)
-    attack_scores = numpy.append(attack_fv, attack_as, axis=1)
     all_labels = numpy.append(all_labels, attack_labels)
     all_scores = numpy.append(all_scores, attack_scores, axis=0)
     
@@ -313,5 +324,4 @@ def organize_llrtraining_scores(database, fv_dirs, as_dirs, normalize=True, pol_
   all_neg = all_scores[all_labels == 0,:]
   return all_pos, all_neg
   
-
 
