@@ -42,7 +42,7 @@ def main():
 
   parser.add_argument('-m', '--machine-input', type=str, dest='machine_input', default=None, help='Base file containing the LLR or LLR_P machine to be plotted')
 
-  parser.add_argument('-n', '--norm-input', type=str, dest='norm_input', default=None, help='Base file containing an normalization parameters')
+  parser.add_argument('-n', '--norm-input', type=str, dest='norm_input', default=None, help='Base file containing normalization parameters')
 
   parser.add_argument('-d', '--devel-thres', type=str, dest='devel_thres', default=None, help='EER/HTER threshold on the devel set (will be used to plot the decision boundary). If the fusion algorithm is SUM, two thresholds need to be specified: first faceverif, then antispoofing', nargs='+')
 

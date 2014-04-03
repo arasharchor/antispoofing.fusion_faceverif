@@ -38,8 +38,6 @@ def main():
   parser.add_argument('--ft', '--fv-threshold', type=float, dest='fv_threshold', default=None, help='The face verification threshold', nargs='+') #nargs='+'
 
   parser.add_argument('--at', '--as-threshold', type=float, dest='as_threshold', default=None, help='The anti-spoofing threshold', nargs='+') #nargs='+'
-  
-  parser.add_argument('--sp', '--save_params', action='store_true', dest='save_params', default=False, help='Save the decision thresholds in the outputdir for future use')
 
   parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', default=False, help='Increases this script verbosity')
  

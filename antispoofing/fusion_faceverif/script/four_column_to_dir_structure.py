@@ -30,10 +30,10 @@ class Score:
 
   def save_score_files(self, output_dir, fv_protocol):
     for obj in self.fileobjs:
-      if fv_protocol == 'real': # licit face verification protocol, scores need to be saved in subdirectories with model ids
-        obj.save(self.scores_dict[str(obj.make_path())], os.path.join(output_dir, 'client%03d' % int(self.model)))
+      if fv_protocol == 'licit': # licit face verification protocol, scores need to be saved in subdirectories with model ids
+        obj.save(self.scores_dict[str(obj.make_path())], os.path.join(output_dir, fv_protocol, 'client%03d' % int(self.model)))
       else: # spoof face verification protocol
-        obj.save(self.scores_dict[str(obj.make_path())], output_dir)
+        obj.save(self.scores_dict[str(obj.make_path())], os.path.join(output_dir, fv_protocol))
 
 
 def main():
@@ -52,9 +52,9 @@ def main():
   
   parser.add_argument('-v', '--input-dir', metavar='DIR', type=str, dest='inputdir', default=INPUT_DIR, help='Base directory containing the videos to be treated by this procedure (defaults to "%(default)s")')
   
-  parser.add_argument('-t', '--fv_protocol', metavar='fv_protocol', type=str, dest="fv_protocol", default='real', help='Specifies whether the score file contains scores for the licit protocol or for spoofing attacks', choices=('licit','spoof'))
+  parser.add_argument('-t', '--fv_protocol', metavar='fv_protocol', type=str, dest="fv_protocol", default='licit', help='Specifies whether the score file contains scores for the licit protocol or for spoofing attacks', choices=('licit','spoof'))
 
-  parser.add_argument('-s', '--scoresubset', metavar='scoresubset', type=str, dest="scoresubset", default='dev', help='Specifies whether the score file contains scores for development (dev), test (eval) or train (train) set', choices=('devel','test', 'train'))
+  parser.add_argument('-s', '--scoresubset', metavar='scoresubset', type=str, dest="scoresubset", default='devel', help='Specifies whether the score file contains scores for development (devel), test (eval) or train (train) set', choices=('devel','test', 'train'))
 
   #######
   # Database especific configuration
@@ -109,7 +109,6 @@ def main():
     frame_index = int(words[2].split('/')[0])
     filestem = words[2][sepind+1:len(words[2])]   
   
-    
     obj = find_object(filestem, objects)
     if obj == -1: raise Exception("File " + filestem + " not found in the database\n")
 

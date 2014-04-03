@@ -41,7 +41,7 @@ def main():
   parser.add_argument('-o', '--output', metavar='FILE', type=str,
       default='plots.pdf', dest='output',
       help='Set the name of the output file (defaults to "%(default)s")')
-  parser.add_argument('-i', '--demandedplot', metavar='STR', type=int, dest='demandedplot', default=1, help='The number of plot that is needed')
+  parser.add_argument('-i', '--demandedplot', metavar='STR', type=int, dest='demandedplot', default=1, help='The number of plot that is needed. Possible options: 1-DET for LICIT protocol; 2-DET for LICIT and SPOOF protocol; 3-DET for LICIT and SPOOF protocol and threshold line; 4-score histogram for LICIT; 5-score histogram for LICIT and threshold line; 6-score histogram for LICIT and SPOOF and threshold line; 7-score histogram for LICIT and SPOOF and probability of success line.')
 
   args = parser.parse_args()
 

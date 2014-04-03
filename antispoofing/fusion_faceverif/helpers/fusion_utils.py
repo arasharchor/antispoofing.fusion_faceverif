@@ -32,7 +32,8 @@ def save_fused_scores(all_scores, all_labels, dirname, protocol, subset):
   """Saves the fused scores in a 4 column format. Since the exact identity of the user is not known, as well as the filename of the used file, we will put dummy identities and dummy filename in the first three columns"""
 
   # remove nan scores
-  outdir = os.path.join(dirname, "10_" + protocol, "scores")
+  #outdir = os.path.join(dirname, "10_" + protocol, "scores")
+  outdir = os.path.join(dirname, protocol, "scores")
   filename = "scores-" + subset
   ensure_dir(outdir)
   f = open(os.path.join(outdir, filename), 'w')
@@ -48,7 +49,8 @@ def save_fused_scores(all_scores, all_labels, dirname, protocol, subset):
 def save_fusion_machine(machine, dirname, protocol, subset):
   """ Saves a trained fusion machine in an .hdf5 file for future use
   """
-  outdir = os.path.join(dirname, "10_" + protocol, "scores")
+  #outdir = os.path.join(dirname, "10_" + protocol, "scores")
+  outdir = os.path.join(dirname, protocol, "scores")
   ensure_dir(outdir)
   outfile = bob.io.HDF5File(os.path.join(outdir, 'llrmachine-' + subset + '.hdf5'), 'w')
   machine.save(outfile)
@@ -56,7 +58,8 @@ def save_fusion_machine(machine, dirname, protocol, subset):
 def save_norm_params(norm_params, dirname, protocol, subset):
   """ Saves parameters of normalization in an .hdf5 file for future use
   """
-  outdir = os.path.join(dirname, "10_" + protocol, "scores")
+  #outdir = os.path.join(dirname, "10_" + protocol, "scores")
+  outdir = os.path.join(dirname, protocol, "scores")
   ensure_dir(outdir)
   outfile = os.path.join(outdir, 'normparams-' + subset + '.hdf5')
   mins = numpy.reshape(norm_params.mins, [1, len(norm_params.mins)])
@@ -152,7 +155,7 @@ def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_
   @param pol_augment If True, the data will be polinomially augmented (columns with quadratic values will be added to the data
 """
 
-  real, attack   = database.get_train_data()
+  real, attack = database.get_train_data()
 
   clients = list(set(["client%03d" % x.get_client_id() for x in real]))
   
@@ -171,7 +174,8 @@ def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_
   # reading the face verification data
   if fv_protocol == 'licit' or fv_protocol == 'both':
     sys.stdout.write('Processing face verif scores: LICIT protocol\n')
-    dir_precise = os.path.join('10_licit', 'nonorm')
+    #dir_precise = os.path.join('10_licit', 'nonorm')
+    dir_precise = os.path.join('licit')
     for cl in clients:
       sys.stdout.write("Processing [%s/%d] in training set\n" % (cl, len(clients)))
       # creating the scores readers from different face verification algorithms
@@ -185,7 +189,8 @@ def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_
   
   if fv_protocol == 'spoof' or fv_protocol == 'both':
     sys.stdout.write('Processing face verif scores: SPOOF protocol\n')
-    dir_precise = os.path.join('10_spoof', 'nonorm')
+    #dir_precise = os.path.join('10_spoof', 'nonorm')
+    dir_precise = os.path.join('spoof')
     real_scorereader_fv = ScoreFusionReader(real, [os.path.join(sd, dir_precise) for sd in fv_dirs])
     attack_scorereader_fv = ScoreFusionReader(attack, [os.path.join(sd, dir_precise) for sd in fv_dirs])  
 
@@ -260,7 +265,8 @@ def gather_fvas_scores(database, subset, fv_dirs, as_dirs=None, binary_labels=Tr
   # reading the face verification data
   if fv_protocol == 'licit' or fv_protocol == 'both':
     sys.stdout.write('Processing face verif scores: LICIT protocol\n')
-    dir_precise = os.path.join('10_licit', 'nonorm')
+    #dir_precise = os.path.join('10_licit', 'nonorm')
+    dir_precise = os.path.join('licit')
     for cl in clients:
       sys.stdout.write("Processing [%s/%d] in  %s set\n" % (cl, len(clients), subset))
       # creating the scores readers from different face verification algorithms
@@ -277,7 +283,8 @@ def gather_fvas_scores(database, subset, fv_dirs, as_dirs=None, binary_labels=Tr
   
   if fv_protocol == 'spoof' or fv_protocol == 'both':
     sys.stdout.write('Processing face verif scores: SPOOF protocol\n')
-    dir_precise = os.path.join('10_spoof', 'nonorm')
+    #dir_precise = os.path.join('10_spoof', 'nonorm')
+    dir_precise = os.path.join('spoof')
     real_scorereader_fv = ScoreFusionReader(real, [os.path.join(sd, dir_precise) for sd in fv_dirs])
     attack_scorereader_fv = ScoreFusionReader(attack, [os.path.join(sd, dir_precise) for sd in fv_dirs])  
 
@@ -310,8 +317,10 @@ def gather_fvas_scores(database, subset, fv_dirs, as_dirs=None, binary_labels=Tr
   # standard normalization of the data if it is required
   if normalize == True:
     if score_norm == None:
-      train_scores, train_labels = gather_train_fvas_data(database, fv_dirs, as_dirs, fv_procotol=fv_protocol, normalized=False, pol_augment=pol_augment)
-      score_norm = ScoreNormalization(train_scores)
+      sys.stderr.write('Error: Normalization can not be done: no normalization parameters specified!\n')    
+      sys.exit(1)
+      #train_scores, train_labels = gather_train_fvas_scores(database, fv_dirs, as_dirs, fv_procotol=fv_protocol, normalized=False, pol_augment=pol_augment)
+      #score_norm = ScoreNormalization(train_scores)
     all_scores = score_norm.calculateZNorm(all_scores)
     
   sys.stdout.write('---------------------------------------------------------\n')
