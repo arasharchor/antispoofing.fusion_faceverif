@@ -5,12 +5,17 @@
 
 from setuptools import setup, find_packages
 
+packages = ['antispoofing'] + ['antispoofing.' + p for p in find_packages('antispoofing')]
+
+# Define package version
+version = open("version.txt").read().rstrip()
+
 # The only thing we do in this file is to call the setup() function with all
 # parameters that define our package.
 setup(
 
     name='antispoofing.fusion_faceverif',
-    version='2.0',
+    version=version,
     description='Decision and score-level fusion tools for joint operation of face verification and anti-spoofing system',
     url='http://github.com/bioidiap/antispoofing.fusion_faceverif',
     license='LICENSE.txt',
@@ -22,10 +27,10 @@ setup(
     packages=find_packages(),
 
     install_requires=[
-        "bob",      # base signal proc./machine learning library
+        "bob.db.base", #1.1.0
         "argparse", # better option parsing
-        "xbob.db.replay >= 1.0.4", # Replay-Attack database   <=1.0.3
-        "antispoofing.utils >= 1.1.3",  #Utils Package <= 1.1.2
+        "bob.db.replay", # Replay-Attack database    >= 1.0.4
+        "antispoofing.utils",  #Utils Package >= 1.1.3
         "antispoofing.fusion", # Fusion utilities
     ],
 

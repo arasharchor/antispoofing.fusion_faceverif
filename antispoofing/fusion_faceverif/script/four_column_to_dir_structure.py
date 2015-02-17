@@ -4,7 +4,8 @@
 
 '''This script takes score files in 4-column format (which are output of FaceRecLib) and arranges the scores as in the directory structure of Replay-Attack'''
 
-import bob, numpy, os
+import bob.io.video
+import numpy, os
 import sys
 
 import antispoofing
@@ -52,9 +53,9 @@ def main():
   
   parser.add_argument('-v', '--input-dir', metavar='DIR', type=str, dest='inputdir', default=INPUT_DIR, help='Base directory containing the videos to be treated by this procedure (defaults to "%(default)s")')
   
-  parser.add_argument('-t', '--fv_protocol', metavar='fv_protocol', type=str, dest="fv_protocol", default='licit', help='Specifies whether the score file contains scores for the licit protocol or for spoofing attacks', choices=('licit','spoof'))
+  parser.add_argument('-t', '--fv_protocol', metavar='fv_protocol', type=str, dest="fv_protocol", default='licit', help='Specifies whether the score file contains scores for the licit protocol or for spoofing attacks (defaults to "%(default)s")', choices=('licit','spoof'))
 
-  parser.add_argument('-s', '--scoresubset', metavar='scoresubset', type=str, dest="scoresubset", default='devel', help='Specifies whether the score file contains scores for development (devel), test (eval) or train (train) set', choices=('devel','test', 'train'))
+  parser.add_argument('-s', '--scoresubset', metavar='scoresubset', type=str, dest="scoresubset", default='devel', help='Specifies whether the score file contains scores for development (devel), test (eval) or train (train) set (defaults to "%(default)s")', choices=('devel','test', 'train'))
 
   #######
   # Database especific configuration
@@ -116,7 +117,7 @@ def main():
       models_dict[model] = Score(model)
 
     if models_dict[model].scores_dict.has_key(str(obj.make_path())) == False:
-      input = bob.io.VideoReader(obj.videofile(args.inputdir)) # read the video to see the total number of frames it contains
+      input = bob.io.video.reader(obj.videofile(args.inputdir)) # read the video to see the total number of frames it contains
       models_dict[model].add_scorelist(obj, input.number_of_frames) 
      
     models_dict[model].update_scorelist(str(obj.make_path()), frame_index, words[3])  

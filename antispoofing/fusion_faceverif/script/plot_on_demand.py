@@ -11,7 +11,7 @@ import sys
 from matplotlib import rc
 rc('text',usetex=1)
 import matplotlib.pyplot as mpl
-import bob
+import bob.measure
 import numpy as np
 import argparse
 

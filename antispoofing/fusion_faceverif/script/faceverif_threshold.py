@@ -9,7 +9,7 @@ This script calculates the threshold of a faceverificaiton algorithm on EER on t
 
 import os, sys
 import argparse
-import bob
+import bob.measure
 import numpy
 
 import antispoofing

@@ -11,7 +11,6 @@ NOTE: While the script can receive more face verification and anti-spoofing syst
 
 import os, sys
 import argparse
-import bob
 import numpy
 
 import antispoofing

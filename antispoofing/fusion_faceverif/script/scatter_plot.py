@@ -9,7 +9,8 @@ This script plots scores of a face verification system and an antispoofing count
 
 import os, sys
 import argparse
-import bob
+import bob.learn.linear
+import bob.io.base
 import numpy
 import string
 
@@ -44,7 +45,7 @@ def main():
 
   parser.add_argument('-n', '--norm-input', type=str, dest='norm_input', default=None, help='Base file containing normalization parameters')
 
-  parser.add_argument('-d', '--devel-thres', type=str, dest='devel_thres', default=None, help='EER/HTER threshold on the devel set (will be used to plot the decision boundary). If the fusion algorithm is SUM, two thresholds need to be specified: first faceverif, then antispoofing', nargs='+')
+  parser.add_argument('-d', '--devel-thres', type=str, dest='devel_thres', default=None, help='EER/HTER threshold on the devel set (will be used to plot the decision boundary). If the fusion algorithm is AND, two thresholds need to be specified: first faceverif, then antispoofing', nargs='+')
 
   parser.add_argument('-f', '--fusion-alg', type=str, dest='fusion_alg', default=None, choices=('LLR', 'SUM', 'LLR_P', 'AND'), help='The fusion algorithm used (based on this the decision boundary will be plotted)')
 
@@ -66,15 +67,15 @@ def main():
   database = args.cls(args)
   
   # read normalization parameters
-  normalize = True
+  
   if args.norm_input != None:
-    norm_params = bob.io.load(args.norm_input)
+    norm_params = bob.io.base.load(args.norm_input)
     score_norm = ScoreNormalization()
     score_norm.set_norm_params(norm_params[0,:], norm_params[1,:], norm_params[2,:], norm_params[3,:])  
-    #normalize = True
+    normalize = True
   else:
     score_norm = None
-    #normalize = False
+    normalize = False
 
   if args.fusion_alg == "LLR_P":
     pol_augment=True
@@ -108,7 +109,7 @@ def main():
         sys.stdout.write('Decision boundary can not be plotted: no input file for LLR machine or for score normalization or decision threshold specified!')
         
       else:
-        llr_machine = bob.machine.LinearMachine(bob.io.HDF5File(args.machine_input))
+        llr_machine = bob.learn.linear.Machine(bob.io.base.HDF5File(args.machine_input))
         n_points = 1000
         xlim = mpl.xlim()
         x = [xlim[0]+(xlim[1]-xlim[0])/3.0, xlim[1]-(xlim[1]-xlim[0])/3]
@@ -137,7 +138,7 @@ def main():
       if args.machine_input == None or score_norm == None or args.devel_thres == None:
         sys.stdout.write('Decision boundary can not be plotted: no input file for LLR machine or for score normalization or decision threshold specified!')
       else:
-        llr_machine = bob.machine.LinearMachine(bob.io.HDF5File(args.machine_input))
+        llr_machine = bob.learn.linear.Machine(bob.io.base.HDF5File(args.machine_input))
         
         ax = mpl.axis()
         grid_width = 100 
@@ -182,7 +183,7 @@ def main():
       else:
         fv_thr = float(args.devel_thres[0])
         as_thr = float(args.devel_thres[1])
-        fv_thr, as_thr = fusion_utils.normalize_points([fv_thr, as_thr], database, args.fv_scoresdir, args.as_scoresdir)
+        #fv_thr, as_thr = fusion_utils.normalize_points([fv_thr, as_thr], database, args.fv_scoresdir, args.as_scoresdir)
         #x = [fv_thr, mpl.xlim()[1]] 
         #y = [as_thr, as_thr]
         ax = fig.axes

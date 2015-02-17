@@ -9,7 +9,6 @@ This script performs fusion of the scores of two or more face verification syste
 
 import os, sys
 import argparse
-import bob
 import numpy
 import string
 

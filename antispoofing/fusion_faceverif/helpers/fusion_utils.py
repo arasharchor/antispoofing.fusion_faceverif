@@ -4,7 +4,7 @@
 
 import os, sys
 import argparse
-import bob
+import bob.io.base
 import numpy
 
 import antispoofing
@@ -52,7 +52,7 @@ def save_fusion_machine(machine, dirname, protocol, subset):
   #outdir = os.path.join(dirname, "10_" + protocol, "scores")
   outdir = os.path.join(dirname, protocol, "scores")
   ensure_dir(outdir)
-  outfile = bob.io.HDF5File(os.path.join(outdir, 'llrmachine-' + subset + '.hdf5'), 'w')
+  outfile = bob.io.base.HDF5File(os.path.join(outdir, 'llrmachine-' + subset + '.hdf5'), 'w')
   machine.save(outfile)
 
 def save_norm_params(norm_params, dirname, protocol, subset):
@@ -70,11 +70,11 @@ def save_norm_params(norm_params, dirname, protocol, subset):
   norm_params_array = numpy.append(mins, maxs, axis=0)
   norm_params_array = numpy.append(norm_params_array, avg, axis=0)
   norm_params_array = numpy.append(norm_params_array, std, axis=0) 
-  bob.io.save(norm_params_array, outfile)
+  bob.io.base.save(norm_params_array, outfile)
 
 def get_labels(indir, files, protocol, client_id=None, onlyValidScores=True, binary_labels=True):
   """
-  Return a numpy.array with the labels of all xbob.db.replay.File
+  Return a numpy.array with the labels of all bob.db.replay.File
 
   @param indir The input directory where the score files are stored. They need to be checked for labeling together with the filename, in order to determine the number of valid scores in each file 
   @param files The files that need to be labeled
@@ -97,7 +97,7 @@ def get_labels(indir, files, protocol, client_id=None, onlyValidScores=True, bin
       fileName = str(f.make_path(os.path.join(indir, client_id), extension='.hdf5'))
     else: #'spoof' protocol
       fileName = str(f.make_path(indir,extension='.hdf5'))
-    scores = bob.io.load(fileName)
+    scores = bob.io.base.load(fileName)
     scores = reshape(scores)
     totalScores =totalScores + scores.shape[1]
     
@@ -110,7 +110,7 @@ def get_labels(indir, files, protocol, client_id=None, onlyValidScores=True, bin
       fileName = str(f.make_path(os.path.join(indir, client_id),extension='.hdf5'))
     else: #'spoof' protocol
       fileName = str(f.make_path(indir,extension='.hdf5'))
-    scores = bob.io.load(fileName)
+    scores = bob.io.base.load(fileName)
     scores = reshape(scores)
     labels = numpy.ndarray(scores.shape, 'int')
     if protocol == 'licit':

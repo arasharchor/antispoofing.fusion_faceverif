@@ -9,13 +9,12 @@ This script calculates the threshold of an anti-spoofing algorithm on the EER of
 
 import os, sys
 import argparse
-import bob
+import bob.measure
 import numpy
 
 import antispoofing
 
 from antispoofing.utils.db import *
-from antispoofing.utils.ml import *
 from antispoofing.utils.helpers import *
 from antispoofing.fusion_faceverif.helpers import *
 

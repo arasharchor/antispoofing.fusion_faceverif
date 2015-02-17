@@ -45,67 +45,25 @@ publications:
 Installation
 ------------
 
-There are 2 options you can follow to get this package installed and
-operational on your computer: you can use automatic installers like `pip
-<http://pypi.python.org/pypi/pip/>`_ (or `easy_install
-<http://pypi.python.org/pypi/setuptools>`_) or manually download, unpack and
-use `zc.buildout <http://pypi.python.org/pypi/zc.buildout>`_ to create a
-virtual work environment just for this package.
+.. note:: 
 
-Using an automatic installer
-============================
+  If you are reading this page through our GitHub portal and not through PyPI,
+  note **the development tip of the package may not be stable** or become
+  unstable in a matter of moments.
 
-Using ``pip`` is the easiest (shell commands are marked with a ``$`` signal)::
+  Go to `http://pypi.python.org/pypi/antispoofing.fusion_faceverif
+  <http://pypi.python.org/pypi/antispoofing.fusion_faceverif>`_ to download the latest
+  stable version of this package. Then, extract the .zip file to a folder of your choice.
 
-  $ pip install antispoofing.fusion_faceverif
+The ``antispoofing.fusion_faceverif`` package is a satellite package of the free signal processing and machine learning library Bob_. This dependency has to be downloaded manually. This version of the package depends on Bob_ version 2 or greater. To install `packages of Bob <https://github.com/idiap/bob/wiki/Packages>`_, please read the `Installation Instructions <https://github.com/idiap/bob/wiki/Installation>`_. For Bob_ to be able to work properly, some dependent Bob packages are required to be installed. Please make sure that you have read the Dependencies for your operating system.
 
-You can also do the same with ``easy_install``::
+The most simple solution is to download and extract ``antispoofing.fusion_faceverif`` package, then to go to the console and write::
 
-  $ easy_install antispoofing.fusion_faceverif
+  $ cd antispoofing.fusion_faceverif
+  $ python bootstrap-buildout.py
+  $ bin/buildout
 
-This will download and install this package plus any other required
-dependencies. It will also verify if the version of Bob you have installed
-is compatible.
-
-This scheme works well with virtual environments by `virtualenv
-<http://pypi.python.org/pypi/virtualenv>`_ or if you have root access to your
-machine. Otherwise, we recommend you use the next option.
-
-Using ``zc.buildout``
-=====================
-
-Download the latest version of this package from `PyPI
-<http://pypi.python.org/pypi/antispoofing.fusion_faceverif>`_ and unpack it in your
-working area. The installation of the toolkit itself uses `buildout
-<http://www.buildout.org/>`_. You don't need to understand its inner workings
-to use this package. Here is a recipe to get you started::
-  
-  $ python bootstrap.py 
-  $ ./bin/buildout
-
-These 2 commands should download and install all non-installed dependencies and
-get you a fully operational test and development environment.
-
-.. note::
-
-  The python shell used in the first line of the previous command set
-  determines the python interpreter that will be used for all scripts developed
-  inside this package. Because this package makes use of `Bob
-  <http://www.idiap.ch/software/bob>`_, you must make sure that the ``bootstrap.py``
-  script is called with the **same** interpreter used to build Bob, or
-  unexpected problems might occur.
-
-  If Bob is installed by the administrator of your system, it is safe to
-  consider it uses the default python interpreter. In this case, the above 3
-  command lines should work as expected. If you have Bob installed somewhere
-  else on a private directory, edit the file ``buildout.cfg`` **before**
-  running ``./bin/buildout``. Find the section named ``external`` and edit the
-  line ``egg-directories`` to point to the ``lib`` directory of the Bob
-  installation you want to use. For example::
-
-    [external]
-    recipe = xbob.buildout:external
-    egg-directories=/Users/crazyfox/work/bob/build/lib
+This will download all required dependent Bob_ and other packages and install them locally. 
 
 Requirements and dependencies
 -----------------------------
@@ -131,14 +89,14 @@ This user guide does not give details on the exact commands how to generate the 
 Step 2: Convert the score files to the requested directory structure
 ====================================================================
 
-As explained before, the score files need to be organized as the directory structure of Replay-Attack. While the anti-spoofing algorithms we use already give the scores in this format, FaceRecLib outputs score files in 4-column format (`format <http://www.idiap.ch/software/bob/docs/releases/last/sphinx/html/measure/index.html?highlight=four#bob.measure.load.split_four_column>`_), particularly, separate score files for the real accesses (LICIT protocol) and attacks (SPOOF protocol) videos. So, the first step is to convert them into the required format. This conversion can be done with the command::
+As explained before, the score files need to be organized as the directory structure of Replay-Attack. While the anti-spoofing algorithms we use already give the scores in this format, FaceRecLib outputs score files in 4-column format (`format <http://www.idiap.ch/software/bob/docs/releases/last/sphinx/html/measure/index.html?highlight=four#bob.measure.load.split_four_column>`_), particularly, separate score files for the real accesses (LICIT protocol) and attacks (SPOOF protocol) videos. So, the first step is to convert them into the required format. For example, to convert the licit scores in the development set, run the following command::
 
-    $ ./bin/four_column_to_dir_structure.py score_file out_dir replay 
+    $ ./bin/four_column_to_dir_structure.py score_file out_dir -t licit -s devel replay 
     
 The arguments ``score_file`` and ``out_dir`` refer to the 4-column score file which is input, and the directory for the converted scores, respectively. To see all the options for the script ``four_column_to_dir_structure.py``.
 just type ``--help`` at the command line. If you want to do the conversion for a particular protocol of Replay-Attack (eg. print protocol), state that protocol at the end of the command::
  
-    $ ./bin/four_column_to_dir_structure.py replay print
+    $ ./bin/four_column_to_dir_structure.py score_file out_dir -t licit -s devel replay print
     
 Do not forget to do this step for all the dataset subsets (train, development and test set) and the two protocols (LICIT and SPOOF), using the appropriate input files and script options. Depending on the protocol, the scores will be saved into subdirectories called ``licit`` and ``spoof``  within ``out_dir``.
     
@@ -156,7 +114,7 @@ AND decision fusion is supported via the script ``and_decision_fusion.py``. AND 
     
 The arguments as_score_dir and fv_score_dir refer to the directory with the score files for the anti-spoofing and face verification threshold respectively. The thresholds calculated with these methods are then fed as an input to the ``and_decision_fusion.py`` script::
 
-    $ ./bin/and_decision_fusion.py score_dir -s fv_score_dir -a as_score_dir --ft fv_thr --at as_thr -v replay
+    $ ./bin/and_decision_fusion.py -s fv_score_dir -a as_score_dir --ft fv_thr --at as_thr -v replay
     
 The script directly prints the error rates. To see all the options for the script ``and_decision_fusion.py``
 just type ``--help`` at the command line.
