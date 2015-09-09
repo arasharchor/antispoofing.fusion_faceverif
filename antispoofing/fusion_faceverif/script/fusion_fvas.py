@@ -20,10 +20,6 @@ from antispoofing.utils.ml import *
 from antispoofing.utils.helpers import *
 from antispoofing.fusion.score_fusion import *
 
-import matplotlib; matplotlib.use('pdf') #avoids TkInter threaded start
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as mpl
-
 def main():
 
   #basedir = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
