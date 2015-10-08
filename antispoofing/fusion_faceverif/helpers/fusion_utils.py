@@ -142,7 +142,6 @@ def get_labels(indir, files, protocol, client_id=None, onlyValidScores=True, bin
 
   return allLabels
 
-
 def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_protocol='both', normalize=True, pol_augment=False):
   """Populates a numpy.ndarray with the nor normalized training scores of face verification and anti-spoofing algorithm(s) and a numpy.array with their corresponding labels. Each column of the arrays correspond to a face verification / anti-spoofing algorithm (with face verification algorithms coming first). The returning result canbe used for normalization purposes
   
@@ -153,7 +152,7 @@ def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_
   @param fv_protocol Specifies the face verification protocol for the returned scores. Can be 'licit', 'spoof' or 'both'
   @param normalize if True, the returned data will be normalized with regards to the training set
   @param pol_augment If True, the data will be polinomially augmented (columns with quadratic values will be added to the data
-"""
+  """
 
   real, attack = database.get_train_data()
 
@@ -206,7 +205,7 @@ def gather_train_fvas_scores(database, fv_dirs, as_dirs, binary_labels=True, fv_
     attack_scores = numpy.append(attack_fv, attack_as, axis=1)
     all_labels = numpy.append(all_labels, attack_labels)
     all_scores = numpy.append(all_scores, attack_scores, axis=0)
-    
+  
   # remove rows with scores with nan values
   all_labels = all_labels[~numpy.isnan(all_scores).any(axis=1)]
   all_scores = all_scores[~numpy.isnan(all_scores).any(axis=1)]
@@ -332,5 +331,107 @@ def organize_llrtraining_scores(database, fv_dirs, as_dirs, normalize=True, pol_
   all_pos = all_scores[all_labels == 1,:]
   all_neg = all_scores[all_labels == 0,:]
   return all_pos, all_neg
-  
 
+
+def gather_fvas_clsp_scores(database, subset, fv_dirs, as_dirs, binary_labels=True, fv_protocol='both', normalize=True, score_norm=None, pol_augment=False):
+  """Populates a numpy.ndarray with the scores of face verification and anti-spoofing algorithm(s) and a numpy.array with their corresponding labels. Each column of the arrays correspond to a face verification / anti-spoofing algorithm (with face verification algorithms coming first). CLSP stands to client-specific - the antispoofing system is client-specific and hence the input scores have the same organization as for the face verification
+  
+  @param database The database (replay)
+  @param subset 'devel', 'test' or 'train'
+  @param fv_dirs List of directories of the scores of face verification algorithms
+  @param as_dirs List of directories of the scores of anti-spoofing algorithms
+  @param binary_labels If True, binary labels will be returned: both impostors and spoofing attacks will be labeled with 0, while real accesses with 1. If False, ternary labels will be returned: impostors: 0, real accesses: 1, spoofing attacks: -1
+  @param fv_protocol Specifies the face verification protocol for the returned scores. Can be 'licit', 'spoof' or 'both'
+  @param normalize If True, the returned data will be normalized with regards to the training set
+  @param score_norm Instance of the antispoofing.utils.ml.ScoreNormalization class, containing the normalization parameters computed over some training data
+  @param pol_augment If True, the data will be polinomially augmented (columns with quadratic values will be added to the data
+"""
+
+  if subset == 'devel':
+    real, attack = database.get_devel_data()
+  elif subset == 'test':
+    real, attack   = database.get_test_data()
+  else:
+    real, attack   = database.get_train_data()
+
+  clients = list(set(["client%03d" % x.get_client_id() for x in real]))
+  
+  sys.stdout.write('Organizing faceverif and antispoofing scores: %s set\n' % (subset))
+  
+  
+  all_scores = numpy.ndarray((0, len(fv_dirs) + len(as_dirs)), 'float');  
+  all_labels = numpy.array([], 'int');
+  
+  # reading the face verification and anti-spoofing data
+  if fv_protocol == 'licit' or fv_protocol == 'both':
+    sys.stdout.write('Processing face verif scores: LICIT protocol\n')
+    #dir_precise = os.path.join('10_licit', 'nonorm')
+    dir_precise = os.path.join('licit')
+    for cl in clients:
+      sys.stdout.write("Processing [%s/%d] in  %s set\n" % (cl, len(clients), subset))
+      # creating the scores readers from different face verification algorithms
+      # joining the scores for face verfication with the anti-spoofing scores. The face verifications scores dirs need to have the client labels
+      real_scorereader_fv = ScoreFusionReader(real, [os.path.join(sd, dir_precise, cl) for sd in fv_dirs])
+      real_scorereader_as = ScoreFusionReader(real, [os.path.join(sd, dir_precise, cl) for sd in as_dirs])
+      real_fv = real_scorereader_fv.getConcatenetedScores(onlyValidScores=False) # raw scores as numpy.array (the scores should be already normalized in the input files)
+      real_as = real_scorereader_as.getConcatenetedScores(onlyValidScores=False) # raw scores as numpy.array (the scores should be already normalized in the input files)
+      labels = get_labels(os.path.join(fv_dirs[0], dir_precise), real, protocol='licit', client_id=cl, onlyValidScores=False, binary_labels=binary_labels) # labels for the face verification queries. The samples in the 'licit' protocol are real accesses => their label depends only on the identities
+      scores = numpy.append(real_fv, real_as, axis=1)
+      all_labels = numpy.append(all_labels, labels)
+      all_scores = numpy.append(all_scores, scores, axis=0)
+  
+  if fv_protocol == 'spoof' or fv_protocol == 'both':
+    sys.stdout.write('Processing face verif scores: SPOOF protocol\n')
+    #dir_precise = os.path.join('10_spoof', 'nonorm')
+    dir_precise = os.path.join('spoof')
+    real_scorereader_fv = ScoreFusionReader(real, [os.path.join(sd, dir_precise) for sd in fv_dirs])
+    attack_scorereader_fv = ScoreFusionReader(attack, [os.path.join(sd, dir_precise) for sd in fv_dirs])  
+    real_scorereader_as = ScoreFusionReader(real, [os.path.join(sd, dir_precise) for sd in as_dirs])
+    attack_scorereader_as = ScoreFusionReader(attack, [os.path.join(sd, dir_precise) for sd in as_dirs])  
+
+    # get raw scores as numpy.array (the scores should be already normalized in the input files)
+    real_fv = real_scorereader_fv.getConcatenetedScores(onlyValidScores=False)
+    attack_fv = attack_scorereader_fv.getConcatenetedScores(onlyValidScores=False) 
+    real_as = real_scorereader_as.getConcatenetedScores(onlyValidScores=False)
+    attack_as = attack_scorereader_as.getConcatenetedScores(onlyValidScores=False) 
+    #labels for the queries. Depends not on the identity, but on whether it is a real access or spoofing attack
+    real_labels = get_labels(os.path.join(fv_dirs[0], dir_precise), real, protocol='spoof', onlyValidScores=False, binary_labels=binary_labels)
+    attack_labels = get_labels(os.path.join(fv_dirs[0], dir_precise), attack, protocol='spoof', onlyValidScores=False, binary_labels=binary_labels)
+    real_scores = numpy.append(real_fv, real_as, axis=1)
+    attack_scores = numpy.append(attack_fv, attack_as, axis=1)
+      
+    all_labels = numpy.append(all_labels, real_labels)
+    all_scores = numpy.append(all_scores, real_scores, axis=0)
+    all_labels = numpy.append(all_labels, attack_labels)
+    all_scores = numpy.append(all_scores, attack_scores, axis=0)
+    
+  # remove rows with scores with nan values
+  all_labels = all_labels[~numpy.isnan(all_scores).any(axis=1)]
+  all_scores = all_scores[~numpy.isnan(all_scores).any(axis=1)]
+
+  # do polinomial augmentation
+  if pol_augment == True:
+    all_scores = polinomial_augmentation(all_scores)
+
+  # standard normalization of the data if it is required
+
+  if normalize == True:
+    if score_norm == None:
+      if subset == 'train':
+        score_norm = ScoreNormalization(all_scores) # training data are normalized by themselves
+        all_scores = score_norm.calculateZNorm(all_scores)
+      else:
+        sys.stderr.write('Error: Normalization can not be done: no normalization parameters specified!\n')    
+        sys.exit(1)
+    else:    
+      all_scores = score_norm.calculateZNorm(all_scores)
+    
+  sys.stdout.write('---------------------------------------------------------\n')
+  return all_scores, all_labels, score_norm  
+
+
+def organize_llrtraining_clsp_scores(database, fv_dirs, as_dirs, normalize=True, pol_augment=False):
+  all_scores, all_labels, score_norm = gather_fvas_clsp_scores(database, 'train', fv_dirs, as_dirs, binary_labels=True, normalize=normalize, pol_augment=pol_augment)
+  all_pos = all_scores[all_labels == 1,:]
+  all_neg = all_scores[all_labels == 0,:]
+  return all_pos, all_neg, score_norm
