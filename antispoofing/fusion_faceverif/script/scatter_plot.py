@@ -47,6 +47,8 @@ def main():
 
   parser.add_argument('-d', '--devel-thres', type=str, dest='devel_thres', default=None, help='EER/HTER threshold on the devel set (will be used to plot the decision boundary). If the fusion algorithm is AND, two thresholds need to be specified: first faceverif, then antispoofing', nargs='+')
 
+  parser.add_argument('--cs', '--client_spec', action='store_true', dest='clientspec', default=False, help='Should be set to TRue if you want to use the fusion with client-specific anti-spoofing algorithm')
+
   parser.add_argument('-f', '--fusion-alg', type=str, dest='fusion_alg', default=None, choices=('LLR', 'SUM', 'LLR_P', 'AND'), help='The fusion algorithm used (based on this the decision boundary will be plotted)')
 
   parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', default=False, help='Increases this script verbosity')
@@ -85,7 +87,10 @@ def main():
   groups_to_plot = ['devel', 'test']
   for group in groups_to_plot:
     
-    all_scores, all_labels = fusion_utils.gather_fvas_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
+    if args.clientspec == True:
+      all_scores, all_labels, score_norm = fusion_utils.gather_fvas_clsp_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
+    else:
+      all_scores, all_labels = fusion_utils.gather_fvas_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
 
     all_scores = all_scores[:,0:2]
     real_accesses = all_scores[all_labels == 1,:]
@@ -99,9 +104,9 @@ def main():
     att_range = range(0, attacks.shape[0], 10)
     racc_range = range(0, real_accesses.shape[0], 10)
 
-    mpl.plot(impostors[imp_range,0], impostors[imp_range,1], 'b^', label = 'impostors')
-    mpl.plot(attacks[att_range,0], attacks[att_range,1], 'rs', label = 'spoofing attacks')
-    mpl.plot(real_accesses[racc_range,0], real_accesses[racc_range,1], 'go', label = 'real accesses', alpha = 0.5) # alpha = 0.2
+    mpl.plot(impostors[imp_range,0], impostors[imp_range,1], marker='^', color='#257bd4', label = 'impostors', linestyle='None')
+    mpl.plot(attacks[att_range,0], attacks[att_range,1], marker='s', color='#d4257b', label = 'spoofing attacks', linestyle='None')
+    mpl.plot(real_accesses[racc_range,0], real_accesses[racc_range,1], marker='o', color='#7bd425', label = 'genuine users', alpha = 0.8, linestyle='None') # alpha = 0.2
     #pp.save_fig()
      
     if args.fusion_alg == 'LLR': #plot LLR decision boundary
@@ -193,7 +198,7 @@ def main():
     mpl.xlabel('Face verification scores')
     mpl.ylabel('Anti-spoofing scores')
     #mpl.title(args.title + " - " + string.upper(group) + " set") 
-    #mpl.legend(loc='lower right', prop=fm.FontProperties(size=16))
+    mpl.legend(loc='lower right', prop=fm.FontProperties(size=16))
     #mpl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0., prop=fm.FontProperties(size=10))
     mpl.grid()
     pp.savefig()
