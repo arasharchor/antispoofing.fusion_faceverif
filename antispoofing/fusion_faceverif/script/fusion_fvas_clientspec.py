@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #Ivana Chingovska <ivana.chingovska@idiap.ch>
-#Tue Nov 20 18:11:15 CET 2012
+#Sat 10 Oct 15:33:20 CEST 2015
 
 """
-This script performs fusion of the scores of two or more face verification systems and antispoofing counter measure. It writes the fused scores into a specified output directory
+This script performs client-specific fusion of the scores of two or more face verification systems and antispoofing counter measure. It writes the fused scores into a specified output directory
 
 """
 
@@ -20,9 +20,6 @@ from antispoofing.utils.ml import *
 from antispoofing.utils.helpers import *
 from antispoofing.fusion.score_fusion import *
 
-
-
-
 def main():
 
   #basedir = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
@@ -38,8 +35,8 @@ def main():
   
   parser.add_argument('-f', '--score-fusion', type=str, dest='fusionalg', default='LLR', choices=('LLR','SUM','LLR_P','SVM', 'GMM'), help='The score fusion algorithm. LLR - Linear Logistic Regression fusion. LLR-P - Polynomial Logistic regression')
 
-  parser.add_argument('--cs', '--client_spec', action='store_true', dest='clientspec', default=False, help='Should be set to TRue if you want to use the fusion with client-specific anti-spoofing algorithm')
-  
+  parser.add_argument('--cs', '--client_spec', action='store_true', dest='clientspec', default=False, help='Should be set to True if you want to use the fusion with client-specific anti-spoofing algorithm')
+
   parser.add_argument('-o', '--output-dir', type=str, dest='outputdir', default='', help='Base directory that will be used to save the fused scores.')
   
   parser.add_argument('--sp', '--save_params', action='store_true', dest='save_params', default=False, help='Save the LLR machine and normalization parameters in the outputdir for future use')

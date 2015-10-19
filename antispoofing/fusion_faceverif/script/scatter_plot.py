@@ -43,7 +43,9 @@ def main():
 
   parser.add_argument('-m', '--machine-input', type=str, dest='machine_input', default=None, help='Base file containing the LLR or LLR_P machine to be plotted')
 
-  parser.add_argument('-n', '--norm-input', type=str, dest='norm_input', default=None, help='Base file containing normalization parameters')
+  parser.add_argument('--ni', '--norm-input', type=str, dest='norm_input', default=None, help='Base file containing normalization parameters')
+
+  parser.add_argument('-n', '--norm', action='store_true', dest='norm', default=False, help='Whether normalization should be performed.')
 
   parser.add_argument('-d', '--devel-thres', type=str, dest='devel_thres', default=None, help='EER/HTER threshold on the devel set (will be used to plot the decision boundary). If the fusion algorithm is AND, two thresholds need to be specified: first faceverif, then antispoofing', nargs='+')
 
@@ -75,6 +77,9 @@ def main():
     score_norm = ScoreNormalization()
     score_norm.set_norm_params(norm_params[0,:], norm_params[1,:], norm_params[2,:], norm_params[3,:])  
     normalize = True
+  if args.norm == True: 
+    normalize = True
+    score_norm = None 
   else:
     score_norm = None
     normalize = False
@@ -84,13 +89,26 @@ def main():
   else:
     pol_augment=False
 
-  groups_to_plot = ['devel', 'test']
+  import ipdb; ipdb.set_trace()
+  if normalize == True and score_norm == None:
+    sys.stdout.write('Reading training data to compute normalization parameters')
+    if args.clientspec == True:
+      all_train_scores_nonorm, all_train_labels_nonorm, _ = fusion_utils.gather_fvas_clsp_scores(database, 'train', args.fv_scoresdir, args.as_scoresdir, normalize=False, pol_augment=pol_augment)
+    else:
+      all_train_scores_nonorm, all_train_labels_nonorm = fusion_utils.gather_fvas_scores(database, 'train', args.fv_scoresdir, args.as_scoresdir, normalize=False, pol_augment=pol_augment)
+    score_norm = ScoreNormalization(all_train_scores_nonorm)  
+
+  groups_to_plot = ['devel',]# 'test']
   for group in groups_to_plot:
     
     if args.clientspec == True:
-      all_scores, all_labels, score_norm = fusion_utils.gather_fvas_clsp_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
+      #all_scores, all_labels, score_norm = fusion_utils.gather_fvas_clsp_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
+      all_scores, all_labels, _ = fusion_utils.gather_fvas_clsp_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = False, pol_augment = pol_augment) 
     else:
-      all_scores, all_labels = fusion_utils.gather_fvas_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
+      #all_scores, all_labels = fusion_utils.gather_fvas_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = normalize, score_norm = score_norm, pol_augment = pol_augment) 
+      all_scores, all_labels = fusion_utils.gather_fvas_scores(database, group, args.fv_scoresdir, args.as_scoresdir, binary_labels=False, normalize = False, pol_augment = pol_augment) 
+
+    all_scores = score_norm.calculateMinMaxNorm(all_scores)
 
     all_scores = all_scores[:,0:2]
     real_accesses = all_scores[all_labels == 1,:]
@@ -198,8 +216,8 @@ def main():
     mpl.xlabel('Face verification scores')
     mpl.ylabel('Anti-spoofing scores')
     #mpl.title(args.title + " - " + string.upper(group) + " set") 
-    mpl.legend(loc='lower right', prop=fm.FontProperties(size=16))
-    #mpl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=4, mode="expand", borderaxespad=0., prop=fm.FontProperties(size=10))
+    #mpl.legend(loc='lower right', prop=fm.FontProperties(size=16))
+    #mpl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=3, mode="expand", borderaxespad=0., prop=fm.FontProperties(size=10))
     mpl.grid()
     pp.savefig()
   

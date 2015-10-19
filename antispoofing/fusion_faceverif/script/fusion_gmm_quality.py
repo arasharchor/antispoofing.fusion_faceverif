@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 #Ivana Chingovska <ivana.chingovska@idiap.ch>
-#Tue Nov 20 18:11:15 CET 2012
+#Mon 14 Sep 15:20:22 CEST 2015
 
 """
-This script performs fusion of the scores of two or more face verification systems and antispoofing counter measure. It writes the fused scores into a specified output directory
-
+This script performs fusion of the scores of two or more face verification systems, antispoofing counter measure and Image Quality Measures, using GMM modeling. It writes the fused scores into a specified output directory. The original algorithm is published in "Biometric System Design Under Zero and Non-Zero Effort Attacks" - Rattani et al.
 """
 
 import os, sys
@@ -16,12 +15,8 @@ import antispoofing
 
 from antispoofing.fusion_faceverif.helpers import *
 from antispoofing.utils.db import *
-from antispoofing.utils.ml import *
 from antispoofing.utils.helpers import *
 from antispoofing.fusion.score_fusion import *
-
-
-
 
 def main():
 
@@ -34,12 +29,14 @@ def main():
 
   parser.add_argument('-a', '--as-scores-dir', type=str, dest='as_scoresdir', default='', help='Base directory containing the scores of different antispoofing algorithms', nargs='+')
 
-  parser.add_argument('-p', '--fv-protocol', type=str, dest='faceverif_protocol', default='licit', choices=('licit','spoof','both'), help='The face verification protocol whose score you want to fuse')
-  
-  parser.add_argument('-f', '--score-fusion', type=str, dest='fusionalg', default='LLR', choices=('LLR','SUM','LLR_P','SVM', 'GMM'), help='The score fusion algorithm. LLR - Linear Logistic Regression fusion. LLR-P - Polynomial Logistic regression')
+  parser.add_argument('-q', '--iqa-scores-dir', type=str, dest='iqa_scoresdir', default=None, help='Base directory containing the IQA scores. Can be the IQA features directly, or IQA scores obtained in a trained way')
 
-  parser.add_argument('--cs', '--client_spec', action='store_true', dest='clientspec', default=False, help='Should be set to TRue if you want to use the fusion with client-specific anti-spoofing algorithm')
-  
+  parser.add_argument('-p', '--fv-protocol', type=str, dest='faceverif_protocol', default='licit', choices=('licit','spoof','both'), help='The face verification protocol whose score you want to fuse')
+
+  parser.add_argument('-f', '--score-fusion', type=str, dest='fusionalg', default='LLR', choices=('LLR','SUM','LLR_P','SVM','GMM'), help='The score fusion algorithm. LLR - Linear Logistic Regression fusion. LLR-P - Polynomial Logistic regression')
+
+  parser.add_argument('--rc', '--remove_cols', type=int, dest='remove_cols', default=None, help='Indices of columns to remove from the IQA features', nargs='+')
+
   parser.add_argument('-o', '--output-dir', type=str, dest='outputdir', default='', help='Base directory that will be used to save the fused scores.')
   
   parser.add_argument('--sp', '--save_params', action='store_true', dest='save_params', default=False, help='Save the LLR machine and normalization parameters in the outputdir for future use')
@@ -58,7 +55,7 @@ def main():
   #######################
   database = args.cls(args)
 
-  sys.stdout.write(args.fusionalg + " FUSION of ANTISPOOFING and FACEVERIFICATION systems!!! " + args.faceverif_protocol + " protocol\n")
+  sys.stdout.write("GMM FUSION of ANTISPOOFING, FACEVERIFICATION and IQA systems!!! " + args.faceverif_protocol + " protocol\n")
   sys.stdout.write('---------------------------------------------------------\n')    
 
   if args.fusionalg == "LLR_P":
@@ -66,27 +63,22 @@ def main():
   else:
     pol_augment=False
 
-  # read the training data for LLR training and normalization purposes
+  # read the training data for training and normalization purposes
   sys.stdout.write("Reading training scores...\n")
-  if args.clientspec == True:
-    all_train_pos, all_train_neg, score_norm = fusion_utils.organize_llrtraining_clsp_scores(database, args.fv_scoresdir, args.as_scoresdir, normalize=True, pol_augment=pol_augment)
-  else:
-    # this part needs to be edited, so that we have the same function for train, as well as for devel and test.
-    all_train_pos, all_train_neg = fusion_utils.organize_llrtraining_scores(database, args.fv_scoresdir, args.as_scoresdir, normalize=True, pol_augment=pol_augment)
-    all_train_scores_nonorm, all_train_labels_nonorm = fusion_utils.gather_fvas_scores(database, 'train', args.fv_scoresdir, args.as_scoresdir, normalize=False, pol_augment=pol_augment)
-    score_norm = ScoreNormalization(all_train_scores_nonorm)
-    sys.stdout.write("-------------------------------------\n")
+  all_train_pos, all_train_neg = fusion_iqa_utils.organize_llrtraining_iqa_scores(database, args.fv_scoresdir, args.as_scoresdir, args.iqa_scoresdir, normalize=True, pol_augment=pol_augment, remove_cols=args.remove_cols)
+  all_train_scores_nonorm, all_train_labels_nonorm = fusion_iqa_utils.gather_fvas_iqa_scores(database, 'train', args.fv_scoresdir, args.as_scoresdir, args.iqa_scoresdir, normalize=False, pol_augment=pol_augment, remove_cols=args.remove_cols)
+  score_norm = ScoreNormalization(all_train_scores_nonorm)
+  sys.stdout.write("-------------------------------------\n")
 
+   
   # Process both devel and test data
   
   subset_alias = {'devel':'dev', 'test':'eval'}
   for subset in ('devel', 'test'):  
     sys.stdout.write("Processing " + string.upper(subset) + " scores, " +  args.faceverif_protocol + " protocol...\n")
-    if args.clientspec == True:
-      all_scores, all_labels, _ = fusion_utils.gather_fvas_clsp_scores(database, subset, args.fv_scoresdir, args.as_scoresdir, binary_labels=True, fv_protocol=args.faceverif_protocol, normalize=True, score_norm = score_norm, pol_augment=pol_augment)
-    else:
-      all_scores, all_labels = fusion_utils.gather_fvas_scores(database, subset, args.fv_scoresdir, args.as_scoresdir, binary_labels=True, fv_protocol=args.faceverif_protocol, normalize=True, score_norm = score_norm, pol_augment=pol_augment)
+    all_scores, all_labels = fusion_iqa_utils.gather_fvas_iqa_scores(database, subset, args.fv_scoresdir, args.as_scoresdir, args.iqa_scoresdir, binary_labels=True, fv_protocol=args.faceverif_protocol, normalize=True, score_norm = score_norm, pol_augment=pol_augment, remove_cols=args.remove_cols)
 
+    #import ipdb; ipdb.set_trace()
     if args.fusionalg == "LLR" or args.fusionalg == "LLR_P":
       score_fusion = LLRFusion()
     elif args.fusionalg == "SVM":
@@ -96,17 +88,10 @@ def main():
     else: #SUM
       score_fusion = SUMFusion() 
 
+    
     score_fusion.train(trainer_scores = (all_train_pos, all_train_neg))
     fused = score_fusion(all_scores)
   
-    if args.save_params == True:
-      if args.fusionalg == "LLR" or args.fusionalg == "LLR_P" or args.fusionalg == "SVM":
-        fusion_utils.save_fusion_machine(score_fusion.get_machine(), args.outputdir, protocol = args.faceverif_protocol, subset = subset_alias[subset])
-        fusion_utils.save_norm_params(ScoreNormalization(all_train_scores_nonorm), args.outputdir, protocol = args.faceverif_protocol, subset = subset_alias[subset])
-      else:
-        score_fusion = SUMFusion() 
-        fusion_utils.save_norm_params(score_norm, args.outputdir, protocol = args.faceverif_protocol, subset = subset_alias[subset])    
-
     fusion_utils.save_fused_scores(fused, all_labels, args.outputdir, protocol = args.faceverif_protocol, subset = subset_alias[subset]) # save the scores in 4-column format
     sys.stdout.write('---------------------------------------------------------\n')    
 
