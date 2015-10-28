@@ -163,7 +163,7 @@ To see all the options for the script ``scatter_plot.py``, just type ``--help`` 
 Additional information
 ======================
 
-The package contains several additional scripts that might be useful in some cases, like ``dir_to_four_column.py`` which converts scores from Replay-Attack directory structure to 4-column file structure.
+The package contains an additional script ``dir_to_four_column.py`` that might be useful in some cases. It converts scores from Replay-Attack directory structure to 4-column file structure.
 
 
 Problems
