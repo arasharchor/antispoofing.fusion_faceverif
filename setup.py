@@ -38,21 +38,14 @@ setup(
       'console_scripts': [
         'and_decision_fusion.py = antispoofing.fusion_faceverif.script.and_decision_fusion:main',
         'fusion_fvas.py = antispoofing.fusion_faceverif.script.fusion_fvas:main',
-        'fusion_fvas_adaptnorm.py = antispoofing.fusion_faceverif.script.fusion_fvas_adaptnorm:main',
-        'fusion_gmm_quality.py = antispoofing.fusion_faceverif.script.fusion_gmm_quality:main',
         'antispoof_threshold.py = antispoofing.fusion_faceverif.script.antispoof_threshold:main',
         'faceverif_threshold.py = antispoofing.fusion_faceverif.script.faceverif_threshold:main',
         'dir_to_four_column.py = antispoofing.fusion_faceverif.script.dir_to_four_column:main',
         'four_column_to_dir_structure.py = antispoofing.fusion_faceverif.script.four_column_to_dir_structure:main',
         'scatter_plot.py = antispoofing.fusion_faceverif.script.scatter_plot:main',
-        'scatter_plot_perclient.py = antispoofing.fusion_faceverif.script.scatter_plot_perclient:main',
         'plot_on_demand.py = antispoofing.fusion_faceverif.script.plot_on_demand:main', 
         'apply_threshold.py = bob.measure.script.apply_threshold:main',
         'eval_threshold.py = bob.measure.script.eval_threshold:main',
-        #
-        'and_decision_epsc.py = antispoofing.fusion_faceverif.script.and_decision_epsc:main',
-        'and_decision_epsc_cs.py = antispoofing.fusion_faceverif.script.and_decision_epsc_cs:main',
-        'and_decision_fusion_to4col.py = antispoofing.fusion_faceverif.script.and_decision_fusion_to4col:main',
         ],
       },
 
